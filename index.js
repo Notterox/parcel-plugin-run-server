@@ -11,7 +11,7 @@ module.exports = function(bundler) {
 
   let server;
   let starting = false;
-
+  let lastBundledHash = '';
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', data => {
     if (data.trim() === 'rs') {
@@ -19,7 +19,17 @@ module.exports = function(bundler) {
     }
   });
 
-  bundler.on('buildEnd', restartServer);
+  bundler.on('bundled', rootBundle => {
+    const bundleHash = rootBundle.getHash();
+    
+    if (bundleHash === lastBundledHash) {
+      return console.log(chalk.magenta.bold(`🚽 Bundle hasn't been changed`));
+    }
+
+    lastBundledHash = bundleHash;
+
+    restartServer();
+  });
 
   function restartServer() {
     if (starting) {
